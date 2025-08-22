@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>トリマーAIボット</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            margin: 0 auto 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        
+        .description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        
+        .features {
+            text-align: left;
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .features h2 {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        
+        .features ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .features li {
+            padding: 8px 0;
+            color: #555;
+            display: flex;
+            align-items: center;
+        }
+        
+        .features li:before {
+            content: "✅";
+            margin-right: 10px;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: #00B900;
+            color: white;
+            padding: 15px 40px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 16px;
+            transition: transform 0.3s;
+            margin-top: 20px;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .plans {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .plan {
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .plan.premium {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102,126,234,0.1) 0%, rgba(118,75,162,0.1) 100%);
+        }
+        
+        .plan h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .plan .price {
+            font-size: 24px;
+            color: #667eea;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .plan ul {
+            list-style: none;
+            padding: 0;
+            text-align: left;
+            font-size: 14px;
+        }
+        
+        .plan li {
+            padding: 5px 0;
+            color: #666;
+        }
+        
+        @media (max-width: 600px) {
+            .plans {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🐕</div>
+        <h1>トリマーAIボット</h1>
+        <p class="description">
+            トリミングに関する質問にAIが即座にお答えします。<br>
+            LINE公式アカウントを友だち追加して、今すぐ始めましょう！
+        </p>
+        
+        <div class="features">
+            <h2>主な機能</h2>
+            <ul>
+                <li>トリミング技術に関する質問への回答</li>
+                <li>犬種別のカットスタイル提案</li>
+                <li>お手入れ方法のアドバイス</li>
+                <li>24時間365日いつでも利用可能</li>
+            </ul>
+        </div>
+        
+        <div class="plans">
+            <div class="plan">
+                <h3>無料プラン</h3>
+                <p class="price">¥0/月</p>
+                <ul>
+                    <li>✓ 月10回まで利用可能</li>
+                    <li>✓ 基本的な質問対応</li>
+                    <li>✓ 毎月リセット</li>
+                </ul>
+            </div>
+            <div class="plan premium">
+                <h3>プレミアムプラン</h3>
+                <p class="price">¥3,000/月</p>
+                <ul>
+                    <li>✓ 無制限で利用可能</li>
+                    <li>✓ 詳細な回答</li>
+                    <li>✓ 優先サポート</li>
+                </ul>
+            </div>
+        </div>
+        
+        <a href="https://line.me/R/ti/p/@YOUR_LINE_ID" class="cta-button">
+            LINE公式アカウントを友だち追加
+        </a>
+    </div>
+</body>
+</html>

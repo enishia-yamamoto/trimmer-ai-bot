@@ -1,0 +1,32 @@
+{
+  "name": "trimmer-consultant-bot",
+  "version": "1.0.0",
+  "description": "LINE AI Chatbot with subscription features for dog groomers",
+  "main": "index.js",
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "tsc",
+    "deploy": "netlify deploy --prod",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "line",
+    "bot",
+    "ai",
+    "subscription",
+    "trimmer"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@line/bot-sdk": "^10.1.2",
+    "@netlify/functions": "^4.2.2",
+    "axios": "^1.11.0",
+    "dotenv": "^17.2.1",
+    "googleapis": "^157.0.0",
+    "stripe": "^18.4.0"
+  }
+}
