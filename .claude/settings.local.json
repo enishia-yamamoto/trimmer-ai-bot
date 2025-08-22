@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(claude mcp add:*)",
+      "Bash(claude mcp:*)",
+      "mcp__serena__activate_project",
+      "Bash(npm init:*)",
+      "Bash(npm install:*)",
+      "Bash(git init:*)",
+      "Bash(git branch:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git config:*)",
+      "Bash(gh:*)",
+      "Bash(netlify:*)",
+      "Bash(npm run build:*)",
+      "Bash(./gh_2.40.1_linux_amd64/bin/gh --version)",
+      "Bash(./gh_2.40.1_linux_amd64/bin/gh auth status)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

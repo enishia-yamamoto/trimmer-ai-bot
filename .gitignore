@@ -37,4 +37,5 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
-*.swo
+*.swogh_2.40.1_linux_amd64*
+create-github-repo.sh
