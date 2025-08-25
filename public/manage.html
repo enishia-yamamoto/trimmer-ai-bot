@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>契約管理</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .container {
+            text-align: center;
+            padding: 2rem;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+        }
+        .loading {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .error, .info {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 5px;
+        }
+        .error {
+            color: #e53e3e;
+            background: #fed7d7;
+        }
+        .info {
+            color: #2b6cb5;
+            background: #bee3f8;
+        }
+        h1 {
+            color: #2d3748;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        p {
+            color: #718096;
+        }
+        .btn {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.75rem 2rem;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 600;
+        }
+        .btn:hover {
+            background: #5a67d8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>契約管理</h1>
+        <div class="loading" id="loading"></div>
+        <p id="status">契約情報を確認しています...</p>
+        <div id="error" class="error" style="display: none;"></div>
+        <div id="info" class="info" style="display: none;"></div>
+    </div>
+
+    <script>
+        async function initializeLiff() {
+            try {
+                await liff.init({ 
+                    liffId: 'YOUR_LIFF_ID' // ここにLIFF IDを設定（checkout.htmlと同じでOK）
+                });
+
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                    return;
+                }
+
+                const profile = await liff.getProfile();
+                const userId = profile.userId;
+
+                // カスタマーポータルURL生成エンドポイントを呼び出し
+                const response = await fetch('/.netlify/functions/create-portal', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ lineUserId: userId }),
+                });
+
+                const data = await response.json();
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('status').style.display = 'none';
+
+                if (response.ok && data.url) {
+                    // カスタマーポータルへリダイレクト
+                    window.location.href = data.url;
+                } else if (data.message) {
+                    // 無料プランユーザーへのメッセージ
+                    document.getElementById('info').style.display = 'block';
+                    document.getElementById('info').innerHTML = 
+                        data.message + '<br><a href="/checkout.html" class="btn">有料プランに登録</a>';
+                } else {
+                    throw new Error(data.error || '契約情報の取得に失敗しました');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('status').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').textContent = 
+                    'エラーが発生しました: ' + error.message;
+            }
+        }
+
+        window.addEventListener('load', initializeLiff);
+    </script>
+</body>
+</html>
