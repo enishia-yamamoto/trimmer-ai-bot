@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>リダイレクト中...</title>
+    <title>決済処理中...</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
     <script>
         async function init() {
             try {
+                // LIFF初期化
                 await liff.init({ liffId: 'YOUR_LIFF_ID' });
                 
                 if (!liff.isLoggedIn()) {
@@ -17,34 +19,51 @@
                     return;
                 }
 
+                // LINE ユーザー情報取得
                 const profile = await liff.getProfile();
                 const action = new URLSearchParams(window.location.search).get('action') || 'checkout';
                 
-                // APIエンドポイントを決定
-                const endpoint = action === 'manage' ? 'create-portal' : 'create-checkout';
-                
-                // URLを生成してリダイレクト
-                const response = await fetch(`/.netlify/functions/${endpoint}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ lineUserId: profile.userId })
-                });
-
-                const data = await response.json();
-                
-                if (data.url) {
-                    window.location.replace(data.url);
-                } else if (data.message) {
-                    // 無料プランユーザーの場合（契約管理時）
-                    alert(data.message);
-                    liff.closeWindow();
+                if (action === 'manage') {
+                    // 契約管理の場合
+                    const response = await fetch('/.netlify/functions/create-portal', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ lineUserId: profile.userId })
+                    });
+                    const data = await response.json();
+                    
+                    if (data.url) {
+                        // LIFFブラウザ内で開く
+                        window.location.href = data.url;
+                    } else {
+                        alert(data.message || 'エラーが発生しました');
+                        liff.closeWindow();
+                    }
+                } else {
+                    // 決済の場合 - Stripe Checkoutを直接呼び出し
+                    const response = await fetch('/.netlify/functions/create-checkout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ lineUserId: profile.userId })
+                    });
+                    const data = await response.json();
+                    
+                    if (data.url) {
+                        // LIFFブラウザ内でStripeに遷移
+                        window.location.href = data.url;
+                    } else {
+                        alert('決済URLの生成に失敗しました');
+                        liff.closeWindow();
+                    }
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('エラーが発生しました');
+                alert('エラーが発生しました: ' + error.message);
                 liff.closeWindow();
             }
         }
+        
+        // 即座に実行
         init();
     </script>
 </body>
