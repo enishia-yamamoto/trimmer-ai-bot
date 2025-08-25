@@ -15,7 +15,16 @@
       "Bash(netlify:*)",
       "Bash(npm run build:*)",
       "Bash(./gh_2.40.1_linux_amd64/bin/gh --version)",
-      "Bash(./gh_2.40.1_linux_amd64/bin/gh auth status)"
+      "Bash(./gh_2.40.1_linux_amd64/bin/gh auth status)",
+      "Bash(git remote add:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(git push:*)",
+      "Bash(git reset:*)",
+      "Bash(npm run dev:*)",
+      "mcp__serena__get_symbols_overview",
+      "mcp__serena__list_dir",
+      "mcp__serena__find_symbol",
+      "mcp__serena__search_for_pattern"
     ],
     "deny": [],
     "ask": []

@@ -54,6 +54,48 @@ async function handleTextMessage(event: line.WebhookEvent) {
   const replyToken = event.replyToken;
 
   try {
+    // Handle rich menu commands
+    if (messageText === '有料プランに登録') {
+      const checkoutUrl = await createCheckoutSession(userId);
+      await client.replyMessage({
+        replyToken,
+        messages: [{
+          type: 'text',
+          text: '以下のリンクから有料プランにご登録ください：',
+        }, {
+          type: 'text',
+          text: checkoutUrl!,
+        }],
+      });
+      return;
+    }
+    
+    if (messageText === '契約管理') {
+      const user = await getUser(userId);
+      if (user?.stripeCustomerId) {
+        const portalUrl = await getCustomerPortalUrl(user.stripeCustomerId);
+        await client.replyMessage({
+          replyToken,
+          messages: [{
+            type: 'text',
+            text: '以下のリンクから契約状況の確認・変更ができます：',
+          }, {
+            type: 'text',
+            text: portalUrl,
+          }],
+        });
+      } else {
+        await client.replyMessage({
+          replyToken,
+          messages: [{
+            type: 'text',
+            text: '現在無料プランをご利用中です。有料プランに登録すると契約管理ページをご利用いただけます。',
+          }],
+        });
+      }
+      return;
+    }
+
     // Get or create user
     let user = await getUser(userId);
     
