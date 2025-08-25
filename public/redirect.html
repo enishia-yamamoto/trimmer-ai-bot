@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>リダイレクト中...</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+    <script>
+        async function init() {
+            try {
+                await liff.init({ liffId: 'YOUR_LIFF_ID' });
+                
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                    return;
+                }
+
+                const profile = await liff.getProfile();
+                const action = new URLSearchParams(window.location.search).get('action') || 'checkout';
+                
+                // APIエンドポイントを決定
+                const endpoint = action === 'manage' ? 'create-portal' : 'create-checkout';
+                
+                // URLを生成してリダイレクト
+                const response = await fetch(`/.netlify/functions/${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ lineUserId: profile.userId })
+                });
+
+                const data = await response.json();
+                
+                if (data.url) {
+                    window.location.replace(data.url);
+                } else if (data.message) {
+                    // 無料プランユーザーの場合（契約管理時）
+                    alert(data.message);
+                    liff.closeWindow();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('エラーが発生しました');
+                liff.closeWindow();
+            }
+        }
+        init();
+    </script>
+</body>
+</html>
