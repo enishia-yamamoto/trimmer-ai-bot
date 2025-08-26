@@ -90,17 +90,18 @@ export async function updateUser(lineUserId: string, updates: Partial<User>): Pr
     const values = [[
       updatedUser.lineUserId,
       updatedUser.displayName,
+      updatedUser.lineUserId,  // difyUserId (C列)
       updatedUser.difyConversationId || '',
       updatedUser.plan,
       updatedUser.monthlyUsageCount,
-      updatedUser.subscriptionStartDate || '',
       updatedUser.lastUsedDate,
+      updatedUser.subscriptionStartDate || '',
       updatedUser.stripeCustomerId || '',
     ]];
 
     await sheets.spreadsheets.values.update({
       spreadsheetId: SPREADSHEET_ID,
-      range: `${SHEET_NAME}!A${userRowIndex + 1}:H${userRowIndex + 1}`,
+      range: `${SHEET_NAME}!A${userRowIndex + 1}:I${userRowIndex + 1}`,
       valueInputOption: 'USER_ENTERED',
       requestBody: { values },
     });
