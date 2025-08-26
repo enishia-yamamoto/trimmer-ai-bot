@@ -17,7 +17,7 @@ export async function getUser(lineUserId: string): Promise<User | null> {
   try {
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: `${SHEET_NAME}!A:H`,
+      range: `${SHEET_NAME}!A:I`,
     });
 
     const rows = response.data.values;
@@ -31,12 +31,12 @@ export async function getUser(lineUserId: string): Promise<User | null> {
     return {
       lineUserId: userRow[0],
       displayName: userRow[1] || '',
-      difyConversationId: userRow[2] || undefined,
-      plan: userRow[3] === 'premium' ? 'premium' : 'free',
-      monthlyUsageCount: parseInt(userRow[4] || '0'),
-      lastUsedDate: userRow[5] || new Date().toISOString(),
-      subscriptionStartDate: userRow[6] || undefined,
-      stripeCustomerId: userRow[7] || undefined,
+      difyConversationId: userRow[3] || undefined,
+      plan: userRow[4] === 'premium' ? 'premium' : 'free',
+      monthlyUsageCount: parseInt(userRow[5] || '0'),
+      lastUsedDate: userRow[6] || new Date().toISOString(),
+      subscriptionStartDate: userRow[7] || undefined,
+      stripeCustomerId: userRow[8] || undefined,
     };
   } catch (error) {
     console.error('Error getting user from Google Sheets:', error);
@@ -49,6 +49,7 @@ export async function createUser(user: Partial<User>): Promise<void> {
     const values = [[
       user.lineUserId,
       user.displayName || '',
+      user.lineUserId,  // difyUserIdとして同じLINE IDを使用
       user.difyConversationId || '',
       user.plan || 'free',
       user.monthlyUsageCount || 0,
@@ -59,7 +60,7 @@ export async function createUser(user: Partial<User>): Promise<void> {
 
     await sheets.spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID,
-      range: `${SHEET_NAME}!A:H`,
+      range: `${SHEET_NAME}!A:I`,
       valueInputOption: 'USER_ENTERED',
       requestBody: { values },
     });
@@ -73,7 +74,7 @@ export async function updateUser(lineUserId: string, updates: Partial<User>): Pr
   try {
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: `${SHEET_NAME}!A:H`,
+      range: `${SHEET_NAME}!A:I`,
     });
 
     const rows = response.data.values;
@@ -123,7 +124,7 @@ export async function resetAllUsageCounts(): Promise<void> {
   try {
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: `${SHEET_NAME}!A:H`,
+      range: `${SHEET_NAME}!A:I`,
     });
 
     const rows = response.data.values;
@@ -152,7 +153,7 @@ export async function getUserByStripeCustomerId(customerId: string): Promise<Use
   try {
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: `${SHEET_NAME}!A:H`,
+      range: `${SHEET_NAME}!A:I`,
     });
 
     const rows = response.data.values;
@@ -165,12 +166,12 @@ export async function getUserByStripeCustomerId(customerId: string): Promise<Use
     return {
       lineUserId: userRow[0],
       displayName: userRow[1] || '',
-      difyConversationId: userRow[2] || undefined,
-      plan: userRow[3] === 'premium' ? 'premium' : 'free',
-      monthlyUsageCount: parseInt(userRow[4] || '0'),
-      lastUsedDate: userRow[5] || new Date().toISOString(),
-      subscriptionStartDate: userRow[6] || undefined,
-      stripeCustomerId: userRow[7] || undefined,
+      difyConversationId: userRow[3] || undefined,
+      plan: userRow[4] === 'premium' ? 'premium' : 'free',
+      monthlyUsageCount: parseInt(userRow[5] || '0'),
+      lastUsedDate: userRow[6] || new Date().toISOString(),
+      subscriptionStartDate: userRow[7] || undefined,
+      stripeCustomerId: userRow[8] || undefined,
     };
   } catch (error) {
     console.error('Error getting user by Stripe customer ID:', error);

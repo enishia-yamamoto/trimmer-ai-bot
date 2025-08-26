@@ -33,17 +33,18 @@
 - **シート名**: users
 - **共有アカウント**: netlify-function@gas-logtest-433402.iam.gserviceaccount.com
 
-### スプレッドシートのヘッダー構成（A列〜H列）
+### スプレッドシートのヘッダー構成（A列〜I列）
 | 列 | ヘッダー名 | 説明 | 例 |
 |---|---|---|---|
 | A | lineUserId | LINE ユーザーID | U5cca7b0f75d8... |
 | B | displayName | LINEの表示名 | ヤマモト |
-| C | difyConversationId | Dify会話ID | 8cc51609-a7a1-... |
-| D | plan | プラン（free/premium） | premium |
-| E | monthlyUsageCount | 月間利用回数 | 0 |
-| F | lastUsedDate | 最終利用日時 | 2025-08-25T07:33:20.431Z |
-| G | subscriptionStartDate | サブスク開始日時 | 2025-08-26T00:57:00.644Z |
-| H | stripeCustomerId | Stripe顧客ID | cus_Sw3Is6LjwwZxT3 |
+| C | difyUserId | Dify ユーザーID（LINE IDと同じ） | U5cca7b0f75d8... |
+| D | difyConversationId | Dify会話ID | 8cc51609-a7a1-... |
+| E | plan | プラン（free/premium） | premium |
+| F | monthlyUsageCount | 月間利用回数 | 0 |
+| G | lastUsedDate | 最終利用日時 | 2025-08-25T07:33:20.431Z |
+| H | subscriptionStartDate | サブスク開始日時 | 2025-08-26T00:57:00.644Z |
+| I | stripeCustomerId | Stripe顧客ID | cus_Sw3Is6LjwwZxT3 |
 
 ## 機能概要
 - LINEリッチメニューから1タップでStripe決済/管理画面へ遷移
