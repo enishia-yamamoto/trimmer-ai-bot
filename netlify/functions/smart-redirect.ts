@@ -52,8 +52,10 @@ export const handler: Handler = async (event) => {
     // 既存ユーザーの場合
     if (user.stripeCustomerId && user.plan === 'premium') {
       // 有料会員 → カスタマーポータル
+      console.log('Creating portal for customer:', user.stripeCustomerId);
       try {
         const portalUrl = await getCustomerPortalUrl(user.stripeCustomerId);
+        console.log('Portal URL created successfully');
         return {
           statusCode: 200,
           headers,
@@ -65,6 +67,8 @@ export const handler: Handler = async (event) => {
         };
       } catch (portalError) {
         console.error('Error creating portal session:', portalError);
+        console.error('Customer ID:', user.stripeCustomerId);
+        console.error('Error details:', JSON.stringify(portalError, null, 2));
         // ポータル作成に失敗した場合はメッセージを返す
         return {
           statusCode: 200,
