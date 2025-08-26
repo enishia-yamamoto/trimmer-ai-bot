@@ -24,8 +24,9 @@
 
 ## LIFF設定
 - **エンドポイントURL**: https://trimmer-ai-bot.netlify.app/redirect.html
-- **LIFF ID**: YOUR_LIFF_ID（要設定）
-- **リッチメニューURL**: https://liff.line.me/[LIFF_ID]
+- **LIFF ID**: 2007989671-db0QbRb3
+- **スコープ**: openid, profile（chat_message.writeは不要）
+- **リッチメニューURL**: https://liff.line.me/2007989671-db0QbRb3
 
 ## Googleスプレッドシート
 - **シート名**: users
