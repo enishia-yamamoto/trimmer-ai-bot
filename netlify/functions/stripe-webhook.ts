@@ -43,6 +43,12 @@ export const handler: Handler = async (event) => {
 
 async function handleCheckoutCompleted(event: Stripe.Event) {
   const session = event.data.object as Stripe.Checkout.Session;
+  console.log('Checkout completed event received:', {
+    sessionId: session.id,
+    customerId: session.customer,
+    metadata: session.metadata,
+  });
+  
   const lineUserId = session.metadata?.lineUserId;
   const customerId = session.customer as string;
 
@@ -51,15 +57,25 @@ async function handleCheckoutCompleted(event: Stripe.Event) {
     return;
   }
 
+  console.log('Processing checkout for LINE user:', lineUserId);
+
   try {
     const user = await getUser(lineUserId);
+    console.log('Current user data:', user);
+    
     if (user) {
-      await updateUser(lineUserId, {
+      const updateData = {
         stripeCustomerId: customerId,
         plan: 'premium',
         subscriptionStartDate: new Date().toISOString(),
         monthlyUsageCount: 0, // Reset usage count when upgrading
-      });
+      };
+      console.log('Updating user with:', updateData);
+      
+      await updateUser(lineUserId, updateData);
+      console.log('User successfully updated to premium');
+    } else {
+      console.error('User not found in database:', lineUserId);
     }
   } catch (error) {
     console.error('Error updating user after checkout:', error);
