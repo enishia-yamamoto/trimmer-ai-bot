@@ -38,12 +38,12 @@
 |---|---|---|---|
 | A | lineUserId | LINE ユーザーID | U5cca7b0f75d8... |
 | B | displayName | LINEの表示名 | ヤマモト |
-| C | difyConversationId | Dify会話ID | 8cc51808-a7a1-... |
+| C | difyConversationId | Dify会話ID | 8cc51609-a7a1-... |
 | D | plan | プラン（free/premium） | premium |
-| E | monthlyUsageCount | 月間利用回数 | 5 |
-| F | stripeCustomerId | Stripe顧客ID | cus_QxyzABC123 |
-| G | lastUsedDate | 最終利用日時 | 2025-08-26T07:33:20.431Z |
-| H | subscriptionEndDate | サブスク終了日 | 2025-09-26T07:33:20.431Z |
+| E | monthlyUsageCount | 月間利用回数 | 0 |
+| F | subscriptionStartDate | サブスク開始日時 | 2025-08-26T00:57:00.644Z |
+| G | lastUsedDate | 最終利用日時 | 2025-08-25T07:33:20.431Z |
+| H | stripeCustomerId | Stripe顧客ID | cus_Sw3Is6LjwwZxT3 |
 
 ## 機能概要
 - LINEリッチメニューから1タップでStripe決済/管理画面へ遷移
