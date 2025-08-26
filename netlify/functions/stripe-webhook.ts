@@ -60,6 +60,15 @@ async function handleCheckoutCompleted(event: Stripe.Event) {
   console.log('Processing checkout for LINE user:', lineUserId);
 
   try {
+    // Stripe顧客にLINE IDをメタデータとして保存
+    const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY!);
+    await stripe.customers.update(customerId, {
+      metadata: {
+        lineUserId: lineUserId,
+      },
+    });
+    console.log('Updated Stripe customer metadata with LINE ID');
+
     const user = await getUser(lineUserId);
     console.log('Current user data:', user);
     

@@ -15,6 +15,7 @@
 - STRIPE_SECRET_KEY
 - STRIPE_WEBHOOK_SECRET
 - STRIPE_PRICE_ID
+- STRIPE_CUSTOMER_PORTAL_URL: https://billing.stripe.com/p/login/test_eVqdR9fr4cql8Anffj1sQ00 （※使用していない）
 - GOOGLE_SHEETS_ID
 - GOOGLE_SERVICE_ACCOUNT_EMAIL
 - GOOGLE_PRIVATE_KEY
@@ -31,6 +32,18 @@
 ## Googleスプレッドシート
 - **シート名**: users
 - **共有アカウント**: netlify-function@gas-logtest-433402.iam.gserviceaccount.com
+
+### スプレッドシートのヘッダー構成（A列〜H列）
+| 列 | ヘッダー名 | 説明 | 例 |
+|---|---|---|---|
+| A | lineUserId | LINE ユーザーID | U5cca7b0f75d8... |
+| B | displayName | LINEの表示名 | ヤマモト |
+| C | difyConversationId | Dify会話ID | 8cc51808-a7a1-... |
+| D | plan | プラン（free/premium） | premium |
+| E | monthlyUsageCount | 月間利用回数 | 5 |
+| F | stripeCustomerId | Stripe顧客ID | cus_QxyzABC123 |
+| G | lastUsedDate | 最終利用日時 | 2025-08-26T07:33:20.431Z |
+| H | subscriptionEndDate | サブスク終了日 | 2025-09-26T07:33:20.431Z |
 
 ## 機能概要
 - LINEリッチメニューから1タップでStripe決済/管理画面へ遷移
