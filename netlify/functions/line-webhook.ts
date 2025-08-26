@@ -107,9 +107,12 @@ async function handleTextMessage(event: line.WebhookEvent) {
       await createUser({
         lineUserId: userId,
         displayName: profile.displayName,
+        difyConversationId: '',
         plan: 'free',
         monthlyUsageCount: 0,
         lastUsedDate: new Date().toISOString(),
+        subscriptionStartDate: '',
+        stripeCustomerId: '',
       });
       
       user = await getUser(userId);
@@ -210,9 +213,12 @@ async function handleFollow(event: line.WebhookEvent) {
       await createUser({
         lineUserId: userId,
         displayName: profile.displayName,
+        difyConversationId: '',
         plan: 'free',
         monthlyUsageCount: 0,
         lastUsedDate: new Date().toISOString(),
+        subscriptionStartDate: '',
+        stripeCustomerId: '',
       });
     }
 
