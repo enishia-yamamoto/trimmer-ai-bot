@@ -41,8 +41,8 @@
 | C | difyConversationId | Dify会話ID | 8cc51609-a7a1-... |
 | D | plan | プラン（free/premium） | premium |
 | E | monthlyUsageCount | 月間利用回数 | 0 |
-| F | subscriptionStartDate | サブスク開始日時 | 2025-08-26T00:57:00.644Z |
-| G | lastUsedDate | 最終利用日時 | 2025-08-25T07:33:20.431Z |
+| F | lastUsedDate | 最終利用日時 | 2025-08-25T07:33:20.431Z |
+| G | subscriptionStartDate | サブスク開始日時 | 2025-08-26T00:57:00.644Z |
 | H | stripeCustomerId | Stripe顧客ID | cus_Sw3Is6LjwwZxT3 |
 
 ## 機能概要

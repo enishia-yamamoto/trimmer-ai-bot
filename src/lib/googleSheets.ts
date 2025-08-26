@@ -34,8 +34,8 @@ export async function getUser(lineUserId: string): Promise<User | null> {
       difyConversationId: userRow[2] || undefined,
       plan: userRow[3] === 'premium' ? 'premium' : 'free',
       monthlyUsageCount: parseInt(userRow[4] || '0'),
-      subscriptionStartDate: userRow[5] || undefined,
-      lastUsedDate: userRow[6] || new Date().toISOString(),
+      lastUsedDate: userRow[5] || new Date().toISOString(),
+      subscriptionStartDate: userRow[6] || undefined,
       stripeCustomerId: userRow[7] || undefined,
     };
   } catch (error) {
@@ -52,8 +52,8 @@ export async function createUser(user: Partial<User>): Promise<void> {
       user.difyConversationId || '',
       user.plan || 'free',
       user.monthlyUsageCount || 0,
-      user.subscriptionStartDate || '',
       user.lastUsedDate || new Date().toISOString(),
+      user.subscriptionStartDate || '',
       user.stripeCustomerId || '',
     ]];
 
@@ -168,8 +168,8 @@ export async function getUserByStripeCustomerId(customerId: string): Promise<Use
       difyConversationId: userRow[2] || undefined,
       plan: userRow[3] === 'premium' ? 'premium' : 'free',
       monthlyUsageCount: parseInt(userRow[4] || '0'),
-      subscriptionStartDate: userRow[5] || undefined,
-      lastUsedDate: userRow[6] || new Date().toISOString(),
+      lastUsedDate: userRow[5] || new Date().toISOString(),
+      subscriptionStartDate: userRow[6] || undefined,
       stripeCustomerId: userRow[7] || undefined,
     };
   } catch (error) {
