@@ -52,16 +52,28 @@ export const handler: Handler = async (event) => {
     // 既存ユーザーの場合
     if (user.stripeCustomerId && user.plan === 'premium') {
       // 有料会員 → カスタマーポータル
-      const portalUrl = await getCustomerPortalUrl(user.stripeCustomerId);
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({ 
-          url: portalUrl,
-          action: 'portal',
-          message: '契約管理ページへ'
-        })
-      };
+      try {
+        const portalUrl = await getCustomerPortalUrl(user.stripeCustomerId);
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({ 
+            url: portalUrl,
+            action: 'portal',
+            message: '契約管理ページへ'
+          })
+        };
+      } catch (portalError) {
+        console.error('Error creating portal session:', portalError);
+        // ポータル作成に失敗した場合はメッセージを返す
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({ 
+            message: '契約管理ページの生成に失敗しました。しばらく経ってから再度お試しください。'
+          })
+        };
+      }
     } else {
       // 無料会員 → Checkout
       const checkoutUrl = await createCheckoutSession(lineUserId);
