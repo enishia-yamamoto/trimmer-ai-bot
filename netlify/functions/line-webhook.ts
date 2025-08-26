@@ -96,34 +96,12 @@ async function handleTextMessage(event: line.WebhookEvent) {
       return;
     }
 
-    // Get or create user
+    // Get user
     let user = await getUser(userId);
+    const isNewUser = !user;
     
-    if (!user) {
-      // Get user profile from LINE
-      const profile = await client.getProfile(userId);
-      
-      // Create new user
-      await createUser({
-        lineUserId: userId,
-        displayName: profile.displayName,
-        difyConversationId: '',
-        plan: 'free',
-        monthlyUsageCount: 0,
-        lastUsedDate: new Date().toISOString(),
-        subscriptionStartDate: '',
-        stripeCustomerId: '',
-      });
-      
-      user = await getUser(userId);
-    }
-
-    if (!user) {
-      throw new Error('Failed to create user');
-    }
-
-    // Check usage limits for free users
-    if (user.plan === 'free' && user.monthlyUsageCount >= FREE_PLAN_LIMIT) {
+    // Check usage limits for existing free users
+    if (user && user.plan === 'free' && user.monthlyUsageCount >= FREE_PLAN_LIMIT) {
       const checkoutUrl = await createCheckoutSession(userId);
       
       await client.replyMessage({
@@ -152,16 +130,41 @@ async function handleTextMessage(event: line.WebhookEvent) {
     const difyResponse = await sendMessageToDify(
       messageText,
       userId,
-      user.difyConversationId
+      user?.difyConversationId
     );
 
-    // Update user's conversation ID and usage count
-    await updateUser(userId, {
-      difyConversationId: difyResponse.conversation_id,
-    });
-    
-    if (user.plan === 'free') {
-      await incrementUsageCount(userId);
+    // Create or update user after getting Dify response
+    if (isNewUser) {
+      // Get user profile from LINE
+      const profile = await client.getProfile(userId);
+      
+      // Create new user with all data including Dify conversation ID
+      await createUser({
+        lineUserId: userId,
+        displayName: profile.displayName,
+        difyConversationId: difyResponse.conversation_id,
+        plan: 'free',
+        monthlyUsageCount: 1,  // First message counts
+        lastUsedDate: new Date().toISOString(),
+        subscriptionStartDate: '',
+        stripeCustomerId: '',
+      });
+    } else {
+      // Update existing user
+      if (user.plan === 'free') {
+        // Update conversation ID and increment usage count in one call
+        await updateUser(userId, {
+          difyConversationId: difyResponse.conversation_id,
+          monthlyUsageCount: user.monthlyUsageCount + 1,
+          lastUsedDate: new Date().toISOString(),
+        });
+      } else {
+        // Premium users: only update conversation ID and last used date
+        await updateUser(userId, {
+          difyConversationId: difyResponse.conversation_id,
+          lastUsedDate: new Date().toISOString(),
+        });
+      }
     }
 
     // Reply to user
@@ -174,7 +177,7 @@ async function handleTextMessage(event: line.WebhookEvent) {
     });
     
     // If free user, add usage count info
-    if (user.plan === 'free') {
+    if (!isNewUser && user.plan === 'free') {
       const remainingCount = FREE_PLAN_LIMIT - (user.monthlyUsageCount + 1);
       if (remainingCount <= 3 && remainingCount > 0) {
         await client.pushMessage({
