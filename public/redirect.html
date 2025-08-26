@@ -21,40 +21,25 @@
 
                 // LINE ユーザー情報取得
                 const profile = await liff.getProfile();
-                const action = new URLSearchParams(window.location.search).get('action') || 'checkout';
                 
-                if (action === 'manage') {
-                    // 契約管理の場合
-                    const response = await fetch('/.netlify/functions/create-portal', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ lineUserId: profile.userId })
-                    });
-                    const data = await response.json();
-                    
-                    if (data.url) {
-                        // LIFFブラウザ内で開く
-                        window.location.href = data.url;
-                    } else {
-                        alert(data.message || 'エラーが発生しました');
-                        liff.closeWindow();
-                    }
+                // ユーザーの状態を自動判別
+                const response = await fetch('/.netlify/functions/smart-redirect', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ lineUserId: profile.userId })
+                });
+                
+                const data = await response.json();
+                
+                if (data.url) {
+                    // 適切なページへ自動遷移（Checkout or Portal）
+                    window.location.href = data.url;
+                } else if (data.message) {
+                    alert(data.message);
+                    liff.closeWindow();
                 } else {
-                    // 決済の場合 - Stripe Checkoutを直接呼び出し
-                    const response = await fetch('/.netlify/functions/create-checkout', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ lineUserId: profile.userId })
-                    });
-                    const data = await response.json();
-                    
-                    if (data.url) {
-                        // LIFFブラウザ内でStripeに遷移
-                        window.location.href = data.url;
-                    } else {
-                        alert('決済URLの生成に失敗しました');
-                        liff.closeWindow();
-                    }
+                    alert('エラーが発生しました');
+                    liff.closeWindow();
                 }
             } catch (error) {
                 console.error('Error:', error);
