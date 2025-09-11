@@ -417,13 +417,23 @@ async function handleTextMessage(event: line.WebhookEvent) {
         });
       }
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error handling text message:', error);
+    
+    // エラーの種類に応じたメッセージ
+    let errorMessage = 'エラーが発生しました。しばらく経ってから再度お試しください。';
+    
+    if (error.response?.data?.message?.includes('overloaded')) {
+      errorMessage = 'ただいまサーバーが混雑しています。少し時間をおいてから再度お試しください。';
+    } else if (error.message?.includes('Failed to process message with AI')) {
+      errorMessage = 'AIの処理でエラーが発生しました。しばらくお待ちください。';
+    }
+    
     await client.replyMessage({
       replyToken,
       messages: [{
         type: 'text',
-        text: 'エラーが発生しました。しばらく経ってから再度お試しください。',
+        text: errorMessage,
       }],
     });
   }
