@@ -155,12 +155,8 @@ async function handleTextMessage(event: line.WebhookEvent) {
                             type: 'text',
                             text: 'お得！',
                             size: 'xs',
-                            color: '#ffffff',
-                            backgroundColor: '#ff5722',
-                            paddingStart: 'sm',
-                            paddingEnd: 'sm',
-                            paddingTop: 'xxs',
-                            paddingBottom: 'xxs',
+                            color: '#ff5722',
+                            weight: 'bold',
                             margin: 'md',
                             flex: 0
                           }
