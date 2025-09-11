@@ -80,6 +80,12 @@ LINE Official Account Managerでの設定：
 - 月間利用制限（無料プラン10回）の自動管理
 - 毎月1日に利用回数自動リセット
 
+## 開発ルール
+**重要**: コード修正後は必ず以下を実行：
+1. `git add -A`
+2. `git commit -m "適切なコミットメッセージ"`
+3. `git push origin main`（認証が必要な場合は通知）
+
 ## テストコマンド
 ```bash
 npm run dev  # ローカル開発
