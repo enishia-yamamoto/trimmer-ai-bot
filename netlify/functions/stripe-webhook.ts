@@ -2,6 +2,7 @@ import { Handler } from '@netlify/functions';
 import { constructWebhookEvent } from '../../src/lib/stripe';
 import { getUserByStripeCustomerId, updateUser, getUser } from '../../src/lib/googleSheets';
 import Stripe from 'stripe';
+import { getCurrentJSTString } from '../../src/lib/utils';
 
 export const handler: Handler = async (event) => {
   if (event.httpMethod !== 'POST') {
@@ -76,7 +77,7 @@ async function handleCheckoutCompleted(event: Stripe.Event) {
       const updateData = {
         stripeCustomerId: customerId,
         plan: 'premium',
-        subscriptionStartDate: new Date().toISOString(),
+        subscriptionStartDate: getCurrentJSTString(),
         monthlyUsageCount: 0, // Reset usage count when upgrading
       };
       console.log('Updating user with:', updateData);
@@ -101,7 +102,7 @@ async function handleSubscriptionUpdate(event: Stripe.Event) {
       const isActive = subscription.status === 'active' || subscription.status === 'trialing';
       await updateUser(user.lineUserId, {
         plan: isActive ? 'premium' : 'free',
-        subscriptionStartDate: isActive ? new Date().toISOString() : undefined,
+        subscriptionStartDate: isActive ? getCurrentJSTString() : undefined,
       });
     }
   } catch (error) {

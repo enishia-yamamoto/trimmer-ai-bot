@@ -22,7 +22,7 @@ export const handler: Handler = async (event) => {
   }
 
   try {
-    const { lineUserId } = JSON.parse(event.body || '{}');
+    const { lineUserId, plan } = JSON.parse(event.body || '{}');
     
     if (!lineUserId) {
       return {
@@ -36,8 +36,8 @@ export const handler: Handler = async (event) => {
     const user = await getUser(lineUserId);
     
     if (!user) {
-      // 新規ユーザー → Checkout
-      const checkoutUrl = await createCheckoutSession(lineUserId);
+      // 新規ユーザー → Checkout（プラン指定あり）
+      const checkoutUrl = await createCheckoutSession(lineUserId, plan);
       return {
         statusCode: 200,
         headers,
@@ -50,7 +50,7 @@ export const handler: Handler = async (event) => {
     }
     
     // 既存ユーザーの場合
-    if (user.stripeCustomerId && user.plan === 'premium') {
+    if (user.stripeCustomerId && (user.plan === 'premium' || user.plan === 'monthly' || user.plan === 'yearly')) {
       // 有料会員 → カスタマーポータル
       console.log('Creating portal for customer:', user.stripeCustomerId);
       try {
@@ -79,8 +79,8 @@ export const handler: Handler = async (event) => {
         };
       }
     } else {
-      // 無料会員 → Checkout
-      const checkoutUrl = await createCheckoutSession(lineUserId);
+      // 無料会員 → Checkout（プラン指定あり）
+      const checkoutUrl = await createCheckoutSession(lineUserId, plan);
       return {
         statusCode: 200,
         headers,

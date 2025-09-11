@@ -3,6 +3,7 @@ import * as line from '@line/bot-sdk';
 import { getUser, createUser, updateUser, incrementUsageCount } from '../../src/lib/googleSheets';
 import { sendMessageToDify } from '../../src/lib/dify';
 import { createCheckoutSession, getCustomerPortalUrl } from '../../src/lib/stripe';
+import { getCurrentJSTString } from '../../src/lib/utils';
 
 const config: line.MiddlewareConfig = {
   channelSecret: process.env.LINE_CHANNEL_SECRET!,
@@ -12,7 +13,7 @@ const client = new line.messagingApi.MessagingApiClient({
   channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN!,
 });
 
-const FREE_PLAN_LIMIT = 10;
+const FREE_PLAN_LIMIT = parseInt(process.env.FREE_PLAN_LIMIT || '10');
 
 export const handler: Handler = async (event) => {
   if (event.httpMethod !== 'POST') {
@@ -55,6 +56,233 @@ async function handleTextMessage(event: line.WebhookEvent) {
 
   try {
     // Handle rich menu commands
+    if (messageText === 'サブスクリプション') {
+      const user = await getUser(userId);
+      
+      if (!user || user.plan === 'free') {
+        // 無料ユーザー向け：プラン選択Flexメッセージ
+        await client.replyMessage({
+          replyToken,
+          messages: [{
+            type: 'flex',
+            altText: 'プラン選択',
+            contents: {
+              type: 'bubble',
+              header: {
+                type: 'box',
+                layout: 'vertical',
+                contents: [{
+                  type: 'text',
+                  text: 'プランを選択してください',
+                  weight: 'bold',
+                  size: 'lg',
+                  align: 'center',
+                  color: '#333333'
+                }]
+              },
+              body: {
+                type: 'box',
+                layout: 'vertical',
+                spacing: 'md',
+                contents: [
+                  // 月額プラン
+                  {
+                    type: 'box',
+                    layout: 'vertical',
+                    backgroundColor: '#f8f8f8',
+                    cornerRadius: 'md',
+                    paddingAll: 'lg',
+                    contents: [
+                      {
+                        type: 'text',
+                        text: '月額プラン',
+                        weight: 'bold',
+                        size: 'lg',
+                        color: '#333333'
+                      },
+                      {
+                        type: 'text',
+                        text: '990円/月（税込）',
+                        size: 'md',
+                        color: '#06C755',
+                        margin: 'sm'
+                      },
+                      {
+                        type: 'text',
+                        text: 'いつでも解約可能',
+                        size: 'sm',
+                        color: '#666666',
+                        margin: 'xs'
+                      }
+                    ]
+                  },
+                  {
+                    type: 'button',
+                    action: {
+                      type: 'uri',
+                      label: '月額プランで登録',
+                      uri: `https://liff.line.me/2007989671-db0QbRb3?plan=monthly`
+                    },
+                    style: 'primary',
+                    color: '#06C755',
+                    height: 'md'
+                  },
+                  {
+                    type: 'separator',
+                    margin: 'lg'
+                  },
+                  // 年額プラン
+                  {
+                    type: 'box',
+                    layout: 'vertical',
+                    backgroundColor: '#fff8e1',
+                    cornerRadius: 'md',
+                    paddingAll: 'lg',
+                    contents: [
+                      {
+                        type: 'box',
+                        layout: 'horizontal',
+                        contents: [
+                          {
+                            type: 'text',
+                            text: '年額プラン',
+                            weight: 'bold',
+                            size: 'lg',
+                            color: '#333333',
+                            flex: 0
+                          },
+                          {
+                            type: 'text',
+                            text: 'お得！',
+                            size: 'xs',
+                            color: '#ffffff',
+                            backgroundColor: '#ff5722',
+                            paddingStart: 'sm',
+                            paddingEnd: 'sm',
+                            paddingTop: 'xxs',
+                            paddingBottom: 'xxs',
+                            margin: 'md',
+                            flex: 0
+                          }
+                        ]
+                      },
+                      {
+                        type: 'text',
+                        text: '9,900円/年（税込）',
+                        size: 'md',
+                        color: '#FF9800',
+                        margin: 'sm',
+                        weight: 'bold'
+                      },
+                      {
+                        type: 'text',
+                        text: '月額プランより2ヶ月分お得',
+                        size: 'sm',
+                        color: '#666666',
+                        margin: 'xs'
+                      }
+                    ]
+                  },
+                  {
+                    type: 'button',
+                    action: {
+                      type: 'uri',
+                      label: '年額プランで登録',
+                      uri: `https://liff.line.me/2007989671-db0QbRb3?plan=yearly`
+                    },
+                    style: 'primary',
+                    color: '#FF9800',
+                    height: 'md'
+                  }
+                ]
+              },
+              footer: {
+                type: 'box',
+                layout: 'vertical',
+                contents: [{
+                  type: 'text',
+                  text: '※無料プランは月10回まで利用可能',
+                  size: 'xs',
+                  color: '#999999',
+                  align: 'center'
+                }]
+              }
+            }
+          }]
+        });
+      } else {
+        // 有料ユーザー向け：契約状況表示
+        const planName = user.plan === 'monthly' ? '月額プラン（990円/月）' : '年額プラン（9,900円/年）';
+        const portalUrl = await getCustomerPortalUrl(user.stripeCustomerId!);
+        
+        await client.replyMessage({
+          replyToken,
+          messages: [{
+            type: 'flex',
+            altText: '契約状況',
+            contents: {
+              type: 'bubble',
+              body: {
+                type: 'box',
+                layout: 'vertical',
+                contents: [
+                  {
+                    type: 'text',
+                    text: '現在のプラン',
+                    weight: 'bold',
+                    size: 'md',
+                    color: '#666666'
+                  },
+                  {
+                    type: 'text',
+                    text: planName,
+                    weight: 'bold',
+                    size: 'xl',
+                    color: '#06C755',
+                    margin: 'sm'
+                  },
+                  {
+                    type: 'separator',
+                    margin: 'lg'
+                  },
+                  {
+                    type: 'text',
+                    text: '契約管理ページでは以下ができます：',
+                    size: 'sm',
+                    color: '#666666',
+                    margin: 'lg',
+                    wrap: true
+                  },
+                  {
+                    type: 'text',
+                    text: '• プラン変更\n• 支払い方法の更新\n• 請求書の確認\n• 解約手続き',
+                    size: 'sm',
+                    color: '#333333',
+                    margin: 'sm',
+                    wrap: true
+                  },
+                  {
+                    type: 'button',
+                    action: {
+                      type: 'uri',
+                      label: '契約管理ページを開く',
+                      uri: portalUrl
+                    },
+                    style: 'primary',
+                    color: '#06C755',
+                    margin: 'lg',
+                    height: 'md'
+                  }
+                ]
+              }
+            }
+          }]
+        });
+      }
+      return;
+    }
+    
+    // 既存の処理（後方互換性のため残しておく）
     if (messageText === '有料プランに登録') {
       const checkoutUrl = await createCheckoutSession(userId);
       await client.replyMessage({
@@ -145,7 +373,7 @@ async function handleTextMessage(event: line.WebhookEvent) {
         difyConversationId: difyResponse.conversation_id,
         plan: 'free',
         monthlyUsageCount: 1,  // First message counts
-        lastUsedDate: new Date().toISOString(),
+        lastUsedDate: getCurrentJSTString(),
         subscriptionStartDate: '',
         stripeCustomerId: '',
       });
@@ -156,13 +384,13 @@ async function handleTextMessage(event: line.WebhookEvent) {
         await updateUser(userId, {
           difyConversationId: difyResponse.conversation_id,
           monthlyUsageCount: user.monthlyUsageCount + 1,
-          lastUsedDate: new Date().toISOString(),
+          lastUsedDate: getCurrentJSTString(),
         });
       } else {
         // Premium users: only update conversation ID and last used date
         await updateUser(userId, {
           difyConversationId: difyResponse.conversation_id,
-          lastUsedDate: new Date().toISOString(),
+          lastUsedDate: getCurrentJSTString(),
         });
       }
     }
@@ -219,7 +447,7 @@ async function handleFollow(event: line.WebhookEvent) {
         difyConversationId: '',
         plan: 'free',
         monthlyUsageCount: 0,
-        lastUsedDate: new Date().toISOString(),
+        lastUsedDate: getCurrentJSTString(),
         subscriptionStartDate: '',
         stripeCustomerId: '',
       });

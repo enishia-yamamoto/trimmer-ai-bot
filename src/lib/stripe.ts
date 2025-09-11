@@ -4,13 +4,23 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-07-30.basil',
 });
 
-export async function createCheckoutSession(lineUserId: string, customerEmail?: string) {
+export async function createCheckoutSession(lineUserId: string, plan?: string, customerEmail?: string) {
   try {
+    // プランに応じた価格IDを選択（環境変数から取得、デフォルトは月額）
+    let selectedPriceId: string;
+    
+    if (plan === 'yearly') {
+      selectedPriceId = process.env.STRIPE_PRICE_ID_YEARLY!;
+    } else {
+      // デフォルトまたは明示的にmonthlyが指定された場合
+      selectedPriceId = process.env.STRIPE_PRICE_ID_MONTHLY!;
+    }
+    
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
         {
-          price: process.env.STRIPE_PRICE_ID!,
+          price: selectedPriceId,
           quantity: 1,
         },
       ],

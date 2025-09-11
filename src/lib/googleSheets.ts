@@ -1,5 +1,6 @@
 import { google } from 'googleapis';
 import { User } from '../types';
+import { getCurrentJSTString } from './utils';
 
 const auth = new google.auth.GoogleAuth({
   credentials: {
@@ -34,7 +35,7 @@ export async function getUser(lineUserId: string): Promise<User | null> {
       difyConversationId: userRow[3] || undefined,
       plan: userRow[4] === 'premium' ? 'premium' : 'free',
       monthlyUsageCount: parseInt(userRow[5] || '0'),
-      lastUsedDate: userRow[6] || new Date().toISOString(),
+      lastUsedDate: userRow[6] || getCurrentJSTString(),
       subscriptionStartDate: userRow[7] || undefined,
       stripeCustomerId: userRow[8] || undefined,
     };
@@ -53,7 +54,7 @@ export async function createUser(user: Partial<User>): Promise<void> {
       user.difyConversationId || '',
       user.plan || 'free',
       user.monthlyUsageCount || 0,
-      user.lastUsedDate || new Date().toISOString(),
+      user.lastUsedDate || getCurrentJSTString(),
       user.subscriptionStartDate || '',
       user.stripeCustomerId || '',
     ]];
@@ -116,7 +117,7 @@ export async function incrementUsageCount(lineUserId: string): Promise<void> {
   if (user) {
     await updateUser(lineUserId, {
       monthlyUsageCount: user.monthlyUsageCount + 1,
-      lastUsedDate: new Date().toISOString(),
+      lastUsedDate: getCurrentJSTString(),
     });
   }
 }
@@ -170,7 +171,7 @@ export async function getUserByStripeCustomerId(customerId: string): Promise<Use
       difyConversationId: userRow[3] || undefined,
       plan: userRow[4] === 'premium' ? 'premium' : 'free',
       monthlyUsageCount: parseInt(userRow[5] || '0'),
-      lastUsedDate: userRow[6] || new Date().toISOString(),
+      lastUsedDate: userRow[6] || getCurrentJSTString(),
       subscriptionStartDate: userRow[7] || undefined,
       stripeCustomerId: userRow[8] || undefined,
     };
