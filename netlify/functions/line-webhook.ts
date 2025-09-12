@@ -314,7 +314,7 @@ async function handleTextMessage(event: line.WebhookEvent) {
                       uri: portalUrl
                     },
                     style: 'secondary',
-                    color: '#999999',
+                    color: '#4169E1',
                     height: 'sm'
                   },
                   {
@@ -354,79 +354,17 @@ async function handleTextMessage(event: line.WebhookEvent) {
       // プラン変更用のCheckoutセッションを作成（既存顧客IDを渡す）
       const checkoutUrl = await createPlanChangeCheckoutSession(userId, user.stripeCustomerId, targetPlan as 'monthly' | 'yearly');
       
+      // 直接決済ページへのURLを送信
       await client.replyMessage({
         replyToken,
         messages: [{
-          type: 'flex',
-          altText: 'プラン変更',
-          contents: {
-            type: 'bubble',
-            header: {
-              type: 'box',
-              layout: 'vertical',
-              contents: [{
-                type: 'text',
-                text: 'プラン変更手続き',
-                weight: 'bold',
-                size: 'lg',
-                align: 'center'
-              }]
-            },
-            body: {
-              type: 'box',
-              layout: 'vertical',
-              contents: [
-                {
-                  type: 'text',
-                  text: targetPlan === 'yearly' ? '年額プランへの変更' : '月額プランへの変更',
-                  weight: 'bold',
-                  size: 'md',
-                  color: '#333333'
-                },
-                {
-                  type: 'text',
-                  text: targetPlan === 'yearly' 
-                    ? '年額9,900円（2ヶ月分お得！）'
-                    : '月額990円',
-                  size: 'sm',
-                  color: '#666666',
-                  margin: 'sm'
-                },
-                {
-                  type: 'separator',
-                  margin: 'lg'
-                },
-                {
-                  type: 'text',
-                  text: '以下のリンクから変更手続きをお願いします。',
-                  size: 'sm',
-                  color: '#666666',
-                  margin: 'md',
-                  wrap: true
-                },
-                {
-                  type: 'text',
-                  text: '※現在のプランは自動的に解約されます\n※日割り計算が適用されます',
-                  size: 'xs',
-                  color: '#999999',
-                  margin: 'sm',
-                  wrap: true
-                },
-                {
-                  type: 'button',
-                  action: {
-                    type: 'uri',
-                    label: 'プラン変更手続きへ',
-                    uri: checkoutUrl!
-                  },
-                  style: 'primary',
-                  color: targetPlan === 'yearly' ? '#FF9800' : '#06C755',
-                  margin: 'lg',
-                  height: 'md'
-                }
-              ]
-            }
-          }
+          type: 'text',
+          text: targetPlan === 'yearly' 
+            ? '年額プラン（9,900円/年）への変更手続きはこちら：\n※現在のプランは自動的に解約され、日割り計算が適用されます'
+            : '月額プラン（990円/月）への変更手続きはこちら：\n※現在のプランは自動的に解約され、日割り計算が適用されます'
+        }, {
+          type: 'text',
+          text: checkoutUrl!
         }]
       });
       return;
