@@ -4,6 +4,10 @@ import { getUserByStripeCustomerId, updateUser, getUser } from '../../src/lib/go
 import Stripe from 'stripe';
 import { getCurrentJSTString } from '../../src/lib/utils';
 
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2025-07-30.basil',
+});
+
 export const handler: Handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
@@ -74,16 +78,31 @@ async function handleCheckoutCompleted(event: Stripe.Event) {
     console.log('Current user data:', user);
     
     if (user) {
+      // サブスクリプション情報を取得して月額/年額を判定
+      const subscriptions = await stripe.subscriptions.list({
+        customer: customerId,
+        limit: 1,
+        status: 'active',
+      });
+      
+      let plan: 'monthly' | 'yearly' = 'monthly'; // デフォルト
+      if (subscriptions.data.length > 0) {
+        const priceId = subscriptions.data[0].items.data[0].price.id;
+        if (priceId === 'price_1S64mMFJbdvgWrDEYWn8lEy7' || priceId === process.env.STRIPE_PRICE_ID_YEARLY) {
+          plan = 'yearly';
+        }
+      }
+      
       const updateData = {
         stripeCustomerId: customerId,
-        plan: 'premium',
+        plan: plan as 'monthly' | 'yearly',
         subscriptionStartDate: getCurrentJSTString(),
         monthlyUsageCount: 0, // Reset usage count when upgrading
       };
       console.log('Updating user with:', updateData);
       
       await updateUser(lineUserId, updateData);
-      console.log('User successfully updated to premium');
+      console.log(`User successfully updated to ${plan} plan`);
     } else {
       console.error('User not found in database:', lineUserId);
     }
@@ -100,8 +119,20 @@ async function handleSubscriptionUpdate(event: Stripe.Event) {
     const user = await getUserByStripeCustomerId(customerId);
     if (user) {
       const isActive = subscription.status === 'active' || subscription.status === 'trialing';
+      
+      // 価格IDから月額/年額を判定
+      let plan: 'free' | 'monthly' | 'yearly' = 'free';
+      if (isActive && subscription.items.data.length > 0) {
+        const priceId = subscription.items.data[0].price.id;
+        if (priceId === 'price_1S64m6FJbdvgWrDEfvPJgEjp' || priceId === process.env.STRIPE_PRICE_ID_MONTHLY) {
+          plan = 'monthly';
+        } else if (priceId === 'price_1S64mMFJbdvgWrDEYWn8lEy7' || priceId === process.env.STRIPE_PRICE_ID_YEARLY) {
+          plan = 'yearly';
+        }
+      }
+      
       await updateUser(user.lineUserId, {
-        plan: isActive ? 'premium' : 'free',
+        plan: plan,
         subscriptionStartDate: isActive ? getCurrentJSTString() : undefined,
       });
     }
