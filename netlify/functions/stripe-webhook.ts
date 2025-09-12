@@ -1,6 +1,6 @@
 import { Handler } from '@netlify/functions';
 import { constructWebhookEvent } from '../../src/lib/stripe';
-import { getUserByStripeCustomerId, updateUser, getUser } from '../../src/lib/googleSheets';
+import { getUserByStripeCustomerId, updateUser, getUser, createUser } from '../../src/lib/googleSheets';
 import Stripe from 'stripe';
 import { getCurrentJSTString } from '../../src/lib/utils';
 
@@ -74,37 +74,56 @@ async function handleCheckoutCompleted(event: Stripe.Event) {
     });
     console.log('Updated Stripe customer metadata with LINE ID');
 
+    // サブスクリプション情報を取得して月額/年額を判定
+    const subscriptions = await stripe.subscriptions.list({
+      customer: customerId,
+      limit: 1,
+      status: 'active',
+    });
+    
+    let plan: 'monthly' | 'yearly' = 'monthly'; // デフォルト
+    if (subscriptions.data.length > 0) {
+      const priceId = subscriptions.data[0].items.data[0].price.id;
+      if (priceId === 'price_1S64mMFJbdvgWrDEYWn8lEy7' || priceId === process.env.STRIPE_PRICE_ID_YEARLY) {
+        plan = 'yearly';
+      }
+    }
+    
     const user = await getUser(lineUserId);
     console.log('Current user data:', user);
     
     if (user) {
-      // サブスクリプション情報を取得して月額/年額を判定
-      const subscriptions = await stripe.subscriptions.list({
-        customer: customerId,
-        limit: 1,
-        status: 'active',
-      });
-      
-      let plan: 'monthly' | 'yearly' = 'monthly'; // デフォルト
-      if (subscriptions.data.length > 0) {
-        const priceId = subscriptions.data[0].items.data[0].price.id;
-        if (priceId === 'price_1S64mMFJbdvgWrDEYWn8lEy7' || priceId === process.env.STRIPE_PRICE_ID_YEARLY) {
-          plan = 'yearly';
-        }
-      }
-      
+      // 既存ユーザーの場合：更新
       const updateData = {
         stripeCustomerId: customerId,
         plan: plan as 'monthly' | 'yearly',
         subscriptionStartDate: getCurrentJSTString(),
         monthlyUsageCount: 0, // Reset usage count when upgrading
       };
-      console.log('Updating user with:', updateData);
+      console.log('Updating existing user with:', updateData);
       
       await updateUser(lineUserId, updateData);
       console.log(`User successfully updated to ${plan} plan`);
     } else {
-      console.error('User not found in database:', lineUserId);
+      // 新規ユーザーの場合：作成
+      console.log('User not found, creating new user with LINE ID:', lineUserId);
+      
+      // Stripe顧客情報から名前を取得（あれば）
+      const customer = await stripe.customers.retrieve(customerId) as Stripe.Customer;
+      const displayName = customer.name || customer.email?.split('@')[0] || 'ユーザー';
+      
+      await createUser({
+        lineUserId: lineUserId,
+        displayName: displayName,
+        difyConversationId: '',
+        plan: plan,
+        monthlyUsageCount: 0,
+        lastUsedDate: getCurrentJSTString(),
+        subscriptionStartDate: getCurrentJSTString(),
+        stripeCustomerId: customerId,
+      });
+      
+      console.log(`New user created with ${plan} plan`);
     }
   } catch (error) {
     console.error('Error updating user after checkout:', error);
