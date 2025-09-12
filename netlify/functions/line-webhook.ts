@@ -2,7 +2,7 @@ import { Handler } from '@netlify/functions';
 import * as line from '@line/bot-sdk';
 import { getUser, createUser, updateUser, incrementUsageCount } from '../../src/lib/googleSheets';
 import { sendMessageToDify } from '../../src/lib/dify';
-import { createCheckoutSession, getCustomerPortalUrl } from '../../src/lib/stripe';
+import { createCheckoutSession, createPlanChangeCheckoutSession, getCustomerPortalUrl } from '../../src/lib/stripe';
 import { getCurrentJSTString } from '../../src/lib/utils';
 
 const config: line.MiddlewareConfig = {
@@ -351,8 +351,8 @@ async function handleTextMessage(event: line.WebhookEvent) {
       
       const targetPlan = messageText === '年額プランに変更' ? 'yearly' : 'monthly';
       
-      // プラン変更用のCheckoutセッションを作成
-      const checkoutUrl = await createCheckoutSession(userId, targetPlan, undefined);
+      // プラン変更用のCheckoutセッションを作成（既存顧客IDを渡す）
+      const checkoutUrl = await createPlanChangeCheckoutSession(userId, user.stripeCustomerId, targetPlan as 'monthly' | 'yearly');
       
       await client.replyMessage({
         replyToken,

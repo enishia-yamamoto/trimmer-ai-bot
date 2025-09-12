@@ -100,14 +100,13 @@ async function handleCheckoutCompleted(event: Stripe.Event) {
         
         for (const subscription of subscriptions.data) {
           if (subscription.id !== newSubscriptionId) {
-            console.log(`Cancelling old subscription: ${subscription.id}`);
-            await stripe.subscriptions.update(subscription.id, {
-              cancel_at_period_end: true,
-              metadata: {
-                cancelled_reason: 'plan_change',
-                replaced_by: newSubscriptionId,
-              }
+            console.log(`Cancelling old subscription immediately: ${subscription.id}`);
+            // 即座にキャンセル（日割り計算が適用される）
+            await stripe.subscriptions.cancel(subscription.id, {
+              prorate: true, // 日割り計算を有効化
+              invoice_now: true // 即座に請求書を作成（返金がある場合）
             });
+            console.log(`Old subscription ${subscription.id} cancelled with proration`);
           }
         }
       }
