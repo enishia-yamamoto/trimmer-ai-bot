@@ -217,13 +217,21 @@ async function handleTextMessage(event: line.WebhookEvent) {
         const currentPrice = user.plan === 'monthly' ? '990円/月' : '9,900円/年';
         const portalUrl = await getCustomerPortalUrl(user.stripeCustomerId!);
         
-        // プラン変更ボタンの設定
+        // プラン変更用のCheckout URLを事前に生成
+        const targetPlan = user.plan === 'monthly' ? 'yearly' : 'monthly';
+        const changePlanUrl = await createPlanChangeCheckoutSession(
+          user.lineUserId, 
+          user.stripeCustomerId!, 
+          targetPlan as 'monthly' | 'yearly'
+        );
+        
+        // プラン変更ボタンの設定（直接URLへ遷移）
         const changePlanButton = user.plan === 'monthly' ? {
           type: 'button' as const,
           action: {
-            type: 'message' as const,
+            type: 'uri' as const,
             label: '年額プランに変更（2ヶ月分お得！）',
-            text: '年額プランに変更'
+            uri: changePlanUrl!
           },
           style: 'secondary' as const,
           color: '#FF9800',
@@ -231,9 +239,9 @@ async function handleTextMessage(event: line.WebhookEvent) {
         } : {
           type: 'button' as const,
           action: {
-            type: 'message' as const,
+            type: 'uri' as const,
             label: '月額プランに変更',
-            text: '月額プランに変更'
+            uri: changePlanUrl!
           },
           style: 'secondary' as const,
           color: '#06C755',
@@ -331,42 +339,6 @@ async function handleTextMessage(event: line.WebhookEvent) {
           }]
         });
       }
-      return;
-    }
-    
-    // プラン変更のハンドラ
-    if (messageText === '月額プランに変更' || messageText === '年額プランに変更') {
-      const user = await getUser(userId);
-      
-      if (!user || !user.stripeCustomerId) {
-        await client.replyMessage({
-          replyToken,
-          messages: [{
-            type: 'text',
-            text: 'プラン変更にはまず有料プランへの登録が必要です。'
-          }]
-        });
-        return;
-      }
-      
-      const targetPlan = messageText === '年額プランに変更' ? 'yearly' : 'monthly';
-      
-      // プラン変更用のCheckoutセッションを作成（既存顧客IDを渡す）
-      const checkoutUrl = await createPlanChangeCheckoutSession(userId, user.stripeCustomerId, targetPlan as 'monthly' | 'yearly');
-      
-      // 直接決済ページへのURLを送信
-      await client.replyMessage({
-        replyToken,
-        messages: [{
-          type: 'text',
-          text: targetPlan === 'yearly' 
-            ? '年額プラン（9,900円/年）への変更手続きはこちら：\n※現在のプランは自動的に解約され、日割り計算が適用されます'
-            : '月額プラン（990円/月）への変更手続きはこちら：\n※現在のプランは自動的に解約され、日割り計算が適用されます'
-        }, {
-          type: 'text',
-          text: checkoutUrl!
-        }]
-      });
       return;
     }
     
