@@ -25,8 +25,7 @@
       "mcp__serena__list_dir",
       "mcp__serena__find_symbol",
       "mcp__serena__search_for_pattern",
-      "Bash(cat:*)",
-      "Bash(GIT_ASKPASS=echo git push https://ghp_9HQcOX9qJr7vKHsRTRsP5XpP5YgpoP2THsUt:x-oauth-basic@github.com/enishia-yamamoto/trimmer-ai-bot.git)"
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []
