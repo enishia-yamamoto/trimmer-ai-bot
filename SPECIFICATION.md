@@ -27,9 +27,10 @@
 
 ### 2.2 プラン変更仕様
 - **アップグレード**: 無料→有料は即時反映
-- **プラン切替**: 月額⇔年額の変更時は旧プランを即座にキャンセル
-- **日割り計算**: プラン変更時は自動的に日割り計算（Stripe標準機能）
-- **ダウングレード**: 支払い失敗時は即座に無料プランに変更
+- **プラン切替**: 月額⇔年額の変更時は旧プランを即座にキャンセル（`stripe.subscriptions.cancel()`使用）
+- **日割り計算**: プラン変更時は自動的に日割り計算（prorate: true, invoice_now: true）
+- **ダウングレード**: 支払い失敗時（past_due状態）は即座に無料プランに変更
+- **顧客ID継承**: プラン変更時は既存のstripeCustomerIdを使用（createPlanChangeCheckoutSession）
 
 ## 3. 機能仕様
 
@@ -71,43 +72,50 @@
 **無料ユーザー向け（サブスクリプションコマンド時）**:
 - 月額・年額プランの選択画面
 - 各プランの料金と特徴を表示
-- LIFFへの直接リンクボタン
+- LIFFへの直接リンクボタン（`https://liff.line.me/2007989671-db0QbRb3?plan=monthly` または `yearly`）
 
 **有料ユーザー向け（サブスクリプションコマンド時）**:
 - 現在のプラン表示（月額/年額）
-- プラン変更ボタン（直接Stripe Checkoutへ）
-- 契約管理ページボタン（カスタマーポータル）
+- プラン変更ボタン（createPlanChangeCheckoutSessionで生成したURLへ直接遷移）
+- 契約管理ページボタン（Stripeカスタマーポータル、色: #4169E1）
 
 **利用制限到達時**:
-- 警告ヘッダー付きFlexメッセージ
+- 警告ヘッダー付きFlexメッセージ（背景色: #FFF3E0、文字色: #E65100）
 - 月額・年額プラン選択オプション
-- 「会話回数の制限があります」メッセージ
+- 「今月の無料利用回数（X回）を使い切りました」メッセージ
+- 「有料プランに登録すると、無制限でご利用いただけます」説明
 
 ### 3.2 決済フロー
 
 #### 3.2.1 新規登録フロー
 1. LINEボットで「サブスクリプション」コマンド
-2. プラン選択（月額/年額）
-3. LIFFリダイレクトページ経由でStripe Checkout
+2. プラン選択（月額/年額）のFlexメッセージ表示
+3. LIFFリダイレクトページ（redirect.html）経由でStripe Checkout（createCheckoutSession使用）
 4. 決済完了後、success.htmlページ表示
-5. Webhookでユーザー情報更新
+5. Stripe Webhookでユーザー情報更新（存在しない場合は新規作成）
 
 #### 3.2.2 プラン変更フロー
 1. 有料ユーザーが「サブスクリプション」コマンド
-2. プラン変更ボタンをクリック
-3. 直接Stripe Checkoutへ（既存顧客IDを使用）
-4. 新プラン登録と同時に旧プランを即座にキャンセル
-5. 日割り計算で差額処理
+2. 現在のプランと変更オプションをFlexメッセージで表示
+3. プラン変更ボタンをクリック（URIアクション）
+4. 直接Stripe Checkoutへ（createPlanChangeCheckoutSessionで既存顧客IDを使用）
+5. checkout.session.completed時に旧プランを自動キャンセル
+6. 日割り計算で差額処理（返金または追加請求）
 
 ### 3.3 Webhook処理
 
 #### 3.3.1 Stripe Webhook
 | イベント | 処理内容 |
 |---------|---------|
-| checkout.session.completed | 新規登録/プラン変更完了処理、複数サブスクリプション時の古いプランキャンセル |
+| checkout.session.completed | 新規登録/プラン変更完了処理、複数サブスクリプション時の古いプランを即座にキャンセル（prorate: true, invoice_now: true） |
 | customer.subscription.created | サブスクリプション作成時のプラン更新 |
-| customer.subscription.updated | ステータス変更時のプラン更新（past_due→free） |
+| customer.subscription.updated | ステータス変更時のプラン更新（active/trialing→有料プラン、past_due/canceled/unpaid→free） |
 | customer.subscription.deleted | サブスクリプション削除時に無料プランへ変更 |
+
+**checkout.session.completed時の特殊処理**:
+- LINE IDをStripe顧客メタデータに保存
+- 複数のアクティブなサブスクリプション検出時、古いものを即座にキャンセル
+- ユーザーが存在しない場合（購入が先行した場合）、新規ユーザーを自動作成
 
 #### 3.3.2 LINE Webhook
 | イベント | 処理内容 |
@@ -165,11 +173,11 @@
 | /.netlify/functions/stripe-webhook | Stripe Webhookエンドポイント |
 
 ### 6.2 静的ページ
-| パス | 説明 |
-|------|------|
-| /redirect.html | LIFF経由でStripe Checkoutへリダイレクト |
-| /success.html | 決済完了ページ |
-| /cancel.html | 決済キャンセルページ |
+| パス | 説明 | 特記事項 |
+|------|------|---------|
+| /redirect.html | LIFF経由でStripe Checkoutへリダイレクト | URLパラメータでplan指定可能 |
+| /success.html | 決済完了ページ | 「LINEに戻る」ボタン（line://ti/p/@361buraa） |
+| /cancel.html | 決済キャンセルページ | 「LINEに戻る」ボタン、会話回数制限の説明 |
 
 ## 7. セキュリティ要件
 
@@ -205,11 +213,13 @@
 - Netlify Functions: タイムアウト10秒
 - LINE Messaging API: 応答は30秒以内
 - Google Sheets API: 1分あたり60リクエストまで
+- Stripe価格ID: ハードコードされた価格IDとの照合あり（環境変数優先）
 
 ### 9.2 ビジネス制約
 - 無料プラン利用回数は環境変数で管理（デフォルト10回）
 - プラン変更時の日割り計算はStripe標準仕様に準拠
-- 支払い失敗時は即座に無料プランへダウングレード
+- 支払い失敗時（past_due状態）は即座に無料プランへダウングレード
+- 残り利用回数が3回以下の場合のみ通知
 
 ## 10. 今後の拡張予定
 
