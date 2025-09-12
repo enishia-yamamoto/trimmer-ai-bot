@@ -58,8 +58,13 @@ async function handleTextMessage(event: line.WebhookEvent) {
     // Handle rich menu commands
     if (messageText === 'サブスクリプション') {
       const user = await getUser(userId);
+      console.log('Subscription command - User data:', JSON.stringify(user, null, 2));
       
-      if (!user || user.plan === 'free') {
+      // 有料プランかどうかを判定（monthly, yearly, premiumは全て有料）
+      const isPaidUser = user && (user.plan === 'monthly' || user.plan === 'yearly' || user.plan === 'premium');
+      console.log('Is paid user:', isPaidUser, 'Plan:', user?.plan);
+      
+      if (!isPaidUser) {
         // 無料ユーザー向け：プラン選択Flexメッセージ
         await client.replyMessage({
           replyToken,
