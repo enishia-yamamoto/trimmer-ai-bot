@@ -84,7 +84,10 @@ LINE Official Account Managerでの設定：
 **重要**: コード修正後は必ず以下を実行：
 1. `git add -A`
 2. `git commit -m "適切なコミットメッセージ"`
-3. `git push origin main`（認証が必要な場合は通知）
+3. GitHubへプッシュ（以下のコマンドを使用）：
+```bash
+GIT_ASKPASS=echo git push https://ghp_9HQcOX9qJr7vKHsRTRsP5XpP5YgpoP2THsUt:x-oauth-basic@github.com/enishia-yamamoto/trimmer-ai-bot.git
+```
 
 ## テストコマンド
 ```bash
