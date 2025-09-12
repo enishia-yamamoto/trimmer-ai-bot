@@ -60,8 +60,8 @@ async function handleTextMessage(event: line.WebhookEvent) {
       const user = await getUser(userId);
       console.log('Subscription command - User data:', JSON.stringify(user, null, 2));
       
-      // 有料プランかどうかを判定（monthly, yearly, premiumは全て有料）
-      const isPaidUser = user && (user.plan === 'monthly' || user.plan === 'yearly' || user.plan === 'premium');
+      // 有料プランかどうかを判定（monthly, yearlyが有料）
+      const isPaidUser = user && (user.plan === 'monthly' || user.plan === 'yearly');
       console.log('Is paid user:', isPaidUser, 'Plan:', user?.plan);
       
       if (!isPaidUser) {

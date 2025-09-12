@@ -33,7 +33,7 @@ export async function getUser(lineUserId: string): Promise<User | null> {
       lineUserId: userRow[0],
       displayName: userRow[1] || '',
       difyConversationId: userRow[3] || undefined,
-      plan: userRow[4] === 'premium' ? 'premium' : 'free',
+      plan: (userRow[4] === 'monthly' || userRow[4] === 'yearly') ? userRow[4] as 'monthly' | 'yearly' : 'free',
       monthlyUsageCount: parseInt(userRow[5] || '0'),
       lastUsedDate: userRow[6] || getCurrentJSTString(),
       subscriptionStartDate: userRow[7] || undefined,
@@ -133,7 +133,7 @@ export async function resetAllUsageCounts(): Promise<void> {
     if (!rows || rows.length <= 1) return;
 
     const updates = rows.slice(1).map((row, index) => {
-      if (row[3] !== 'premium') {
+      if (row[4] !== 'monthly' && row[4] !== 'yearly') {
         row[4] = '0'; // Reset usage count for free users
       }
       return row;
@@ -169,7 +169,7 @@ export async function getUserByStripeCustomerId(customerId: string): Promise<Use
       lineUserId: userRow[0],
       displayName: userRow[1] || '',
       difyConversationId: userRow[3] || undefined,
-      plan: userRow[4] === 'premium' ? 'premium' : 'free',
+      plan: (userRow[4] === 'monthly' || userRow[4] === 'yearly') ? userRow[4] as 'monthly' | 'yearly' : 'free',
       monthlyUsageCount: parseInt(userRow[5] || '0'),
       lastUsedDate: userRow[6] || getCurrentJSTString(),
       subscriptionStartDate: userRow[7] || undefined,

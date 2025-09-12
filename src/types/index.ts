@@ -2,7 +2,7 @@ export interface User {
   lineUserId: string;
   displayName: string;
   difyConversationId?: string;
-  plan: 'free' | 'premium';
+  plan: 'free' | 'monthly' | 'yearly';
   monthlyUsageCount: number;
   subscriptionStartDate?: string;
   lastUsedDate: string;
