@@ -207,9 +207,33 @@ async function handleTextMessage(event: line.WebhookEvent) {
           }]
         });
       } else {
-        // 有料ユーザー向け：契約状況表示
-        const planName = user.plan === 'monthly' ? '月額プラン（990円/月）' : '年額プラン（9,900円/年）';
+        // 有料ユーザー向け：契約状況表示とプラン変更オプション
+        const currentPlan = user.plan === 'monthly' ? '月額プラン' : '年額プラン';
+        const currentPrice = user.plan === 'monthly' ? '990円/月' : '9,900円/年';
         const portalUrl = await getCustomerPortalUrl(user.stripeCustomerId!);
+        
+        // プラン変更ボタンの設定
+        const changePlanButton = user.plan === 'monthly' ? {
+          type: 'button' as const,
+          action: {
+            type: 'message' as const,
+            label: '年額プランに変更（2ヶ月分お得！）',
+            text: '年額プランに変更'
+          },
+          style: 'secondary' as const,
+          color: '#FF9800',
+          height: 'md' as const
+        } : {
+          type: 'button' as const,
+          action: {
+            type: 'message' as const,
+            label: '月額プランに変更',
+            text: '月額プランに変更'
+          },
+          style: 'secondary' as const,
+          color: '#06C755',
+          height: 'md' as const
+        };
         
         await client.replyMessage({
           replyToken,
@@ -226,16 +250,32 @@ async function handleTextMessage(event: line.WebhookEvent) {
                     type: 'text',
                     text: '現在のプラン',
                     weight: 'bold',
-                    size: 'md',
+                    size: 'sm',
                     color: '#666666'
                   },
                   {
-                    type: 'text',
-                    text: planName,
-                    weight: 'bold',
-                    size: 'xl',
-                    color: '#06C755',
-                    margin: 'sm'
+                    type: 'box',
+                    layout: 'horizontal',
+                    margin: 'sm',
+                    contents: [
+                      {
+                        type: 'text',
+                        text: currentPlan,
+                        weight: 'bold',
+                        size: 'xl',
+                        color: '#06C755',
+                        flex: 0
+                      },
+                      {
+                        type: 'text',
+                        text: currentPrice,
+                        size: 'md',
+                        color: '#333333',
+                        margin: 'md',
+                        flex: 0,
+                        gravity: 'bottom'
+                      }
+                    ]
                   },
                   {
                     type: 'separator',
@@ -243,31 +283,42 @@ async function handleTextMessage(event: line.WebhookEvent) {
                   },
                   {
                     type: 'text',
-                    text: '契約管理ページでは以下ができます：',
-                    size: 'sm',
-                    color: '#666666',
-                    margin: 'lg',
-                    wrap: true
+                    text: 'プラン変更',
+                    weight: 'bold',
+                    size: 'md',
+                    color: '#333333',
+                    margin: 'lg'
+                  },
+                  changePlanButton,
+                  {
+                    type: 'separator',
+                    margin: 'lg'
                   },
                   {
                     type: 'text',
-                    text: '• プラン変更\n• 支払い方法の更新\n• 請求書の確認\n• 解約手続き',
+                    text: 'その他の管理',
                     size: 'sm',
-                    color: '#333333',
-                    margin: 'sm',
-                    wrap: true
+                    color: '#666666',
+                    margin: 'lg'
                   },
                   {
                     type: 'button',
                     action: {
                       type: 'uri',
-                      label: '契約管理ページを開く',
+                      label: '契約管理ページ',
                       uri: portalUrl
                     },
-                    style: 'primary',
-                    color: '#06C755',
-                    margin: 'lg',
-                    height: 'md'
+                    style: 'secondary',
+                    color: '#999999',
+                    height: 'sm'
+                  },
+                  {
+                    type: 'text',
+                    text: '※支払い方法変更・請求書確認・解約',
+                    size: 'xs',
+                    color: '#999999',
+                    margin: 'sm',
+                    align: 'center'
                   }
                 ]
               }
@@ -275,6 +326,107 @@ async function handleTextMessage(event: line.WebhookEvent) {
           }]
         });
       }
+      return;
+    }
+    
+    // プラン変更のハンドラ
+    if (messageText === '月額プランに変更' || messageText === '年額プランに変更') {
+      const user = await getUser(userId);
+      
+      if (!user || !user.stripeCustomerId) {
+        await client.replyMessage({
+          replyToken,
+          messages: [{
+            type: 'text',
+            text: 'プラン変更にはまず有料プランへの登録が必要です。'
+          }]
+        });
+        return;
+      }
+      
+      const targetPlan = messageText === '年額プランに変更' ? 'yearly' : 'monthly';
+      const targetPriceId = targetPlan === 'yearly' 
+        ? (process.env.STRIPE_PRICE_ID_YEARLY || 'price_1S64mMFJbdvgWrDEYWn8lEy7')
+        : (process.env.STRIPE_PRICE_ID_MONTHLY || 'price_1S64m6FJbdvgWrDEfvPJgEjp');
+      
+      // Stripeのカスタマーポータルで変更する方法を案内
+      const portalUrl = await getCustomerPortalUrl(user.stripeCustomerId);
+      
+      await client.replyMessage({
+        replyToken,
+        messages: [{
+          type: 'flex',
+          altText: 'プラン変更',
+          contents: {
+            type: 'bubble',
+            header: {
+              type: 'box',
+              layout: 'vertical',
+              contents: [{
+                type: 'text',
+                text: 'プラン変更手続き',
+                weight: 'bold',
+                size: 'lg',
+                align: 'center'
+              }]
+            },
+            body: {
+              type: 'box',
+              layout: 'vertical',
+              contents: [
+                {
+                  type: 'text',
+                  text: targetPlan === 'yearly' ? '年額プランへの変更' : '月額プランへの変更',
+                  weight: 'bold',
+                  size: 'md',
+                  color: '#333333'
+                },
+                {
+                  type: 'text',
+                  text: targetPlan === 'yearly' 
+                    ? '年額9,900円（2ヶ月分お得！）'
+                    : '月額990円',
+                  size: 'sm',
+                  color: '#666666',
+                  margin: 'sm'
+                },
+                {
+                  type: 'separator',
+                  margin: 'lg'
+                },
+                {
+                  type: 'text',
+                  text: '以下のボタンから変更手続きをお願いします。',
+                  size: 'sm',
+                  color: '#666666',
+                  margin: 'md',
+                  wrap: true
+                },
+                {
+                  type: 'text',
+                  text: '※変更は次回請求日から適用されます\n※日割り計算が自動で行われます',
+                  size: 'xs',
+                  color: '#999999',
+                  margin: 'sm',
+                  wrap: true
+                },
+                {
+                  type: 'button',
+                  action: {
+                    type: 'uri',
+                    label: 'プラン変更ページへ',
+                    uri: portalUrl
+                  },
+                  style: 'primary',
+                  color: targetPlan === 'yearly' ? '#FF9800' : '#06C755',
+                  margin: 'lg',
+                  height: 'md'
+                }
+              ]
+            }
+          }
+        }]
+      });
       return;
     }
     
