@@ -77,15 +77,39 @@ async function handleCheckoutCompleted(event: Stripe.Event) {
     // サブスクリプション情報を取得して月額/年額を判定
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
-      limit: 1,
       status: 'active',
     });
     
     let plan: 'monthly' | 'yearly' = 'monthly'; // デフォルト
+    let newSubscriptionId: string | undefined;
+    
+    // 最新のサブスクリプションからプランを判定
     if (subscriptions.data.length > 0) {
-      const priceId = subscriptions.data[0].items.data[0].price.id;
+      // 最新のサブスクリプションを取得（作成日時でソート）
+      const latestSubscription = subscriptions.data.sort((a, b) => b.created - a.created)[0];
+      newSubscriptionId = latestSubscription.id;
+      const priceId = latestSubscription.items.data[0].price.id;
+      
       if (priceId === 'price_1S64mMFJbdvgWrDEYWn8lEy7' || priceId === process.env.STRIPE_PRICE_ID_YEARLY) {
         plan = 'yearly';
+      }
+      
+      // 複数のアクティブなサブスクリプションがある場合、古いものをキャンセル
+      if (subscriptions.data.length > 1) {
+        console.log(`Found ${subscriptions.data.length} active subscriptions. Cancelling old ones...`);
+        
+        for (const subscription of subscriptions.data) {
+          if (subscription.id !== newSubscriptionId) {
+            console.log(`Cancelling old subscription: ${subscription.id}`);
+            await stripe.subscriptions.update(subscription.id, {
+              cancel_at_period_end: true,
+              metadata: {
+                cancelled_reason: 'plan_change',
+                replaced_by: newSubscriptionId,
+              }
+            });
+          }
+        }
       }
     }
     

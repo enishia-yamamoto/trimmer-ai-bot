@@ -350,12 +350,9 @@ async function handleTextMessage(event: line.WebhookEvent) {
       }
       
       const targetPlan = messageText === '年額プランに変更' ? 'yearly' : 'monthly';
-      const targetPriceId = targetPlan === 'yearly' 
-        ? (process.env.STRIPE_PRICE_ID_YEARLY || 'price_1S64mMFJbdvgWrDEYWn8lEy7')
-        : (process.env.STRIPE_PRICE_ID_MONTHLY || 'price_1S64m6FJbdvgWrDEfvPJgEjp');
       
-      // Stripeのカスタマーポータルで変更する方法を案内
-      const portalUrl = await getCustomerPortalUrl(user.stripeCustomerId);
+      // プラン変更用のCheckoutセッションを作成
+      const checkoutUrl = await createCheckoutSession(userId, targetPlan, undefined);
       
       await client.replyMessage({
         replyToken,
@@ -401,7 +398,7 @@ async function handleTextMessage(event: line.WebhookEvent) {
                 },
                 {
                   type: 'text',
-                  text: '以下のボタンから変更手続きをお願いします。',
+                  text: '以下のリンクから変更手続きをお願いします。',
                   size: 'sm',
                   color: '#666666',
                   margin: 'md',
@@ -409,7 +406,7 @@ async function handleTextMessage(event: line.WebhookEvent) {
                 },
                 {
                   type: 'text',
-                  text: '※変更は次回請求日から適用されます\n※日割り計算が自動で行われます',
+                  text: '※現在のプランは自動的に解約されます\n※日割り計算が適用されます',
                   size: 'xs',
                   color: '#999999',
                   margin: 'sm',
@@ -419,8 +416,8 @@ async function handleTextMessage(event: line.WebhookEvent) {
                   type: 'button',
                   action: {
                     type: 'uri',
-                    label: 'プラン変更ページへ',
-                    uri: portalUrl
+                    label: 'プラン変更手続きへ',
+                    uri: checkoutUrl!
                   },
                   style: 'primary',
                   color: targetPlan === 'yearly' ? '#FF9800' : '#06C755',
