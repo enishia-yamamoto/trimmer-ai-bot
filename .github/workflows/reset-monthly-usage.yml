@@ -1,0 +1,40 @@
+name: Reset Monthly Usage
+
+on:
+  schedule:
+    # 毎月1日 0:00 JST (UTC 15:00 前日)
+    - cron: '0 15 * * *'
+  workflow_dispatch: # 手動実行も可能
+
+jobs:
+  reset-usage:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check if first day of month (JST)
+        id: check-date
+        run: |
+          # JSTで日付を取得
+          JST_DATE=$(TZ=Asia/Tokyo date +%d)
+          echo "Current date in JST: $JST_DATE"
+          if [ "$JST_DATE" = "01" ]; then
+            echo "should_reset=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_reset=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Reset usage counts
+        if: steps.check-date.outputs.should_reset == 'true'
+        run: |
+          response=$(curl -X POST \
+            https://trimmer-ai-bot.netlify.app/.netlify/functions/reset-usage \
+            -H "Authorization: Bearer ${{ secrets.RESET_CRON_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            --fail \
+            --silent \
+            --show-error)
+          echo "Reset response: $response"
+      
+      - name: Notify completion
+        if: steps.check-date.outputs.should_reset == 'true'
+        run: echo "Monthly usage reset completed at $(TZ=Asia/Tokyo date)"

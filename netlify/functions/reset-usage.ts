@@ -1,25 +1,41 @@
-import { Handler, schedule } from '@netlify/functions';
+import { Handler } from '@netlify/functions';
 import { resetAllUsageCounts } from '../../src/lib/googleSheets';
 
-// This function runs on the 1st of every month at 00:00 UTC
-const resetUsageHandler: Handler = async (event) => {
+export const handler: Handler = async (event) => {
+  // セキュリティ: Authorization headerチェック
+  const authHeader = event.headers.authorization;
+  const expectedToken = process.env.RESET_CRON_TOKEN;
+  
+  if (!expectedToken || authHeader !== `Bearer ${expectedToken}`) {
+    return {
+      statusCode: 401,
+      body: JSON.stringify({ error: 'Unauthorized' })
+    };
+  }
+
   try {
-    console.log('Starting monthly usage reset...');
+    console.log('月次利用回数リセット処理開始:', new Date().toISOString());
+    
+    // 全ユーザーの利用回数をリセット
     await resetAllUsageCounts();
-    console.log('Monthly usage reset completed successfully');
+    
+    console.log('月次利用回数リセット処理完了');
     
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: 'Usage counts reset successfully' }),
+      body: JSON.stringify({
+        message: 'Monthly usage reset completed',
+        timestamp: new Date().toISOString()
+      })
     };
   } catch (error) {
-    console.error('Error resetting usage counts:', error);
+    console.error('リセット処理エラー:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Failed to reset usage counts' }),
+      body: JSON.stringify({
+        error: 'Reset failed',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      })
     };
   }
 };
-
-// Schedule to run at midnight on the 1st of every month
-export const handler = schedule('0 0 1 * *', resetUsageHandler);
