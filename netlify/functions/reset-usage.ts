@@ -8,19 +8,19 @@ export const handler: Handler = async (event) => {
   const jstDate = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Tokyo"}));
   const day = jstDate.getDate();
   
-  // 1日でない場合はスキップ
-  if (day !== 1) {
+  // 18日でない場合はスキップ（テスト用：本番は1日に戻す）
+  if (day !== 18) {
     console.log(`本日は${day}日のため、リセット処理をスキップします`);
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: `Skipped: Today is day ${day}, not day 1` })
+      body: JSON.stringify({ message: `Skipped: Today is day ${day}, not day 18` })
     };
   }
   
   // Authorization headerチェックは削除（Scheduled Functionは内部実行のため不要）
   
   try {
-    console.log('月次利用回数リセット処理開始（毎月1日）:', new Date().toISOString());
+    console.log('月次利用回数リセット処理開始（テスト：18日実行）:', new Date().toISOString());
     
     // 全ユーザーの利用回数をリセット
     await resetAllUsageCounts();
