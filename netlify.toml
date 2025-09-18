@@ -7,7 +7,7 @@
   node_bundler = "esbuild"
 
 [functions."reset-usage"]
-  schedule = "0 15 * * *"  # 毎日 15:00 (UTC) = 日本時間 0:00（コード内で1日判定）
+  schedule = "0 0 1 * *"  # 毎月1日 0:00 (UTC) = 日本時間 9:00
 
 [[redirects]]
   from = "/api/*"

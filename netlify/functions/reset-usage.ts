@@ -4,23 +4,10 @@ import { resetAllUsageCounts } from '../../src/lib/googleSheets';
 // Netlify Scheduled Function
 // スケジュール設定はnetlify.tomlで管理
 export const handler: Handler = async (event) => {
-  // 日本時間で現在の日付を取得
-  const jstDate = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Tokyo"}));
-  const day = jstDate.getDate();
-  
-  // 1日でない場合はスキップ
-  if (day !== 1) {
-    console.log(`本日は${day}日のため、リセット処理をスキップします`);
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ message: `Skipped: Today is day ${day}, not day 1` })
-    };
-  }
-  
-  // Authorization headerチェックは削除（Scheduled Functionは内部実行のため不要）
+  // 毎月1日 9:00 JSTに自動実行（netlify.tomlで設定）
   
   try {
-    console.log('月次利用回数リセット処理開始（毎月1日）:', new Date().toISOString());
+    console.log('月次利用回数リセット処理開始（毎月1日 9:00 JST）:', new Date().toISOString());
     
     // 全ユーザーの利用回数をリセット
     await resetAllUsageCounts();
