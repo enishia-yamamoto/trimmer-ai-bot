@@ -133,15 +133,17 @@ export async function resetAllUsageCounts(): Promise<void> {
     if (!rows || rows.length <= 1) return;
 
     const updates = rows.slice(1).map((row, index) => {
-      if (row[4] !== 'monthly' && row[4] !== 'yearly') {
-        row[4] = '0'; // Reset usage count for free users
+      // row[4] = plan (E列), row[5] = monthlyUsageCount (F列)
+      if (row[4] === 'free') {
+        row[5] = '0'; // 無料プランのみ利用回数をリセット
       }
+      // 有料プラン（monthly, yearly）は利用回数をリセットしない（無制限のため）
       return row;
     });
 
     await sheets.spreadsheets.values.update({
       spreadsheetId: SPREADSHEET_ID,
-      range: `${SHEET_NAME}!A2:H${updates.length + 1}`,
+      range: `${SHEET_NAME}!A2:I${updates.length + 1}`,  // I列まで更新
       valueInputOption: 'USER_ENTERED',
       requestBody: { values: updates },
     });
