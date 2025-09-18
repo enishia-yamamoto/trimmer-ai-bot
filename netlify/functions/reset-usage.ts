@@ -1,10 +1,9 @@
-import { Handler, schedule } from '@netlify/functions';
+import { Handler } from '@netlify/functions';
 import { resetAllUsageCounts } from '../../src/lib/googleSheets';
 
-// Netlify Scheduled Function として設定
-// 日本時間で毎月1日 0:00 = UTC時間で前月末日 15:00
-// Netlifyは標準的なcron式のみサポートのため、毎日実行して日付チェックする
-export const handler = schedule('0 15 * * *', async (event) => {
+// Netlify Scheduled Function
+// スケジュール設定はnetlify.tomlで管理
+export const handler: Handler = async (event) => {
   // 日本時間で現在の日付を取得
   const jstDate = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Tokyo"}));
   const day = jstDate.getDate();
@@ -45,4 +44,4 @@ export const handler = schedule('0 15 * * *', async (event) => {
       })
     };
   }
-});
+};
